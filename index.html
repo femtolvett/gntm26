@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>h4kcu_007</title>
+	<meta charset="utf-8">
+	<!-- Compiled w/ P5LIVE, http://github.com/ffd8/p5live -->
+	<style type="text/css">
+		body{
+			margin:0;
+			overflow:hidden;
+		}
+		canvas{
+			position:fixed;
+			top:0;
+			left:0;
+			z-index:-1;
+			width:100vw;
+			height:100vh;
+			margin:0;
+		}
+	</style>
+	<script type="text/javascript">
+		// eco-mode = only render if window focused
+		window.onblur = function () {
+			noLoop();
+		};
+		window.onfocus = function () {
+			loop();
+		};
+	</script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/p5@1/lib/p5.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/processing/p5.js-sound/lib/p5.sound.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/hydra-synth"></script>
+<script type="text/javascript" src="includes/libs/hydra-synth.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/ffd8/hy5@main/hy5.js"></script>
+<script type="text/javascript" src="includes/libs/hy5.js"></script>
+</head>
+<body style="background: rgb(0, 0, 0);">
+
+<script type="text/javascript">
+//h4kcu_007
+
+/* CUSTOM FUNCTIONS FOR P5LIVE */
+// keep fullscreen if window resized
+function windowResized() {
+	resizeCanvas(windowWidth, windowHeight);
+}
+
+// custom ease function
+function ease(iVal, oVal, eVal){
+	return oVal += (iVal - oVal) * eVal;
+}
+
+// processing compatibility
+function println(msg){
+	print(msg);
+}
+
+
+let libs = ['https://unpkg.com/hydra-synth', 'includes/libs/hydra-synth.js', 'https://cdn.jsdelivr.net/gh/ffd8/hy5@main/hy5.js', 'includes/libs/hy5.js']
+
+// sandbox
+noize()
+.out
+
+// s0.initP5()
+// sandbox
+
+P5.zIndex()
+H.toggle(-1)
+
+
+let aaa = []
+
+
+function setup(){
+	createCanvas(windowWidth,windowHeight,WEBGL)
+	setupAudio(true)
+	
+	aaa.push=color(255,0,0)
+	aaa.push=color(0,255,0)
+	aaa.push=color(0,255,255)
+
+}
+
+
+
+
+function draw(){
+	background(0,5)
+
+	
+	updateAudio()
+	//clear()
+	orbitControl(3)
+	
+	
+	push()
+	//lights()
+	directionalLight(255,0,0,0,-1,1)
+	directionalLight(255,160,0,-1,0,1)
+
+	
+	rotateX(frameCount*.02)
+	rotateY(frameCount*.02)
+	rotateZ(frameCount*.02)
+	
+	for (let i=0; i< fftEase.length; i++){
+		let freq =fftEase[i]
+		let x= map(i,0,fftEase.length,0,width/2)
+		let mx= map(mouseX,0,width,0,1)
+		
+		let aaax=aaa[i]
+		//translate(200)
+		fill(255)
+		
+		//stroke(2*freq)
+		noStroke()
+		spotLight(250, 20, 0, x,freq, 100, 0, 0, -1, 20);
+		
+		
+		rotateZ(freq/600)
+		rotateY(x/10000)
+		rotateX (freq/2000)
+		box(x*freq/100, freq/2, freq/2)
+		stroke(255)
+		line(x*freq/100,200)
+	}
+	
+	pop()
+	
+
+	
+}
+
+
+  
+
+ /*
+	audio utils for P5LIVE
+*/
+
+class P5LIVEaudio{
+	constructor(makeGlobal = false){
+		this.fft = [],
+		this.fftEase = [],
+		this.waveform = [],
+		this.waveformEase = [],
+		this.amp = 0.0,
+		this.ampEase = 0.0,
+		this.ampL = 0.0,
+		this.ampEaseL = 0.0,
+		this.ampR = 0.0,
+		this.ampEaseR = 0.0,
+		this.numBins = 512,
+		this.bands = 12
+		this.ease = .075
+		this.makeGlobal = makeGlobal
+	}
+
+	setup(){
+		userStartAudio()
+		this.mic = new p5.AudioIn()
+		this.mic.start()
+		this.fftRaw = new p5.FFT(0.75, this.numBins)
+		this.fftRaw.setInput(this.mic)
+
+		this.update()
+		this.waveformEase = this.waveform
+		this.fftEase = this.fft
+
+		return this // can alias as another variable
+	}
+
+	update(){
+		this.fftRaw.analyze()
+		this.amp = this.mic.getLevel() * 1000 // average mixed amplitude
+		this.ampEase = ease(this.amp, this.ampEase, this.ease) // smooth 'amp'
+		this.ampL = this.mic.amplitude.getLevel(0) * 500 // average left amplitude
+		this.ampEaseL = ease(this.ampL, this.ampEaseL, this.ease) // smooth 'ampL'
+		this.ampR = this.mic.amplitude.getLevel(1) * 500 // average right amplitude
+		this.ampEaseR = ease(this.ampR, this.ampEaseR, this.ease) // smooth 'ampR'
+		this.waveform = this.fftRaw.waveform() // array (-1, 1)
+		this.fft = this.fftRaw.logAverages(this.fftRaw.getOctaveBands(this.bands)) // array (0, 255)
+		
+		for(let i=0; i < this.waveformEase.length; i++){
+			this.waveformEase[i] = ease(this.waveform[i], this.waveformEase[i], this.ease)
+		}
+		
+		for(let i=0; i < this.fftEase.length; i++){
+			this.fftEase[i] = ease(this.fft[i], this.fftEase[i], this.ease)
+		}
+
+		if(this.makeGlobal){
+			for (const key in this){
+				if(key != 'makeGlobal' && key != 'ease'){
+					// console.log(key, this[key]);	
+					window[key] = this[key];	
+				}
+			}
+		}
+	}
+}
+
+function setupAudio(makeGlobal = false){
+	a5 = new P5LIVEaudio(makeGlobal)
+	a5.setup()
+}
+
+function updateAudio(){
+	try{
+		a5.update()
+	}catch(e){
+		setTimeout(()=>{a5.update()}, 200)
+	}
+	
+}
+
+
+</script>
+
+</body>
+</html>
