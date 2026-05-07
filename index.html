@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>new_046</title>
+	<title>adbis_001</title>
 	<meta charset="utf-8">
 	<!-- Compiled w/ P5LIVE, http://github.com/ffd8/p5live -->
 	<style type="text/css">
@@ -28,12 +28,13 @@
 			loop();
 		};
 	</script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/p5@2/lib/p5.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/p5@1/lib/p5.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/processing/p5.js-sound/lib/p5.sound.min.js"></script>
 </head>
-<body style="background: rgb(200, 200, 200);">
+<body style="background: rgb(0, 0, 0);">
 
 <script type="text/javascript">
-//new_046
+//adbis_001
 
 /* CUSTOM FUNCTIONS FOR P5LIVE */
 // keep fullscreen if window resized
@@ -52,88 +53,35 @@ function println(msg){
 }
 
 
-let font;
-let particles = [];
+function setup() {
+	createCanvas(windowWidth, windowHeight, WEBGL);
 
-// p5 = '2'
-
-async function setup() {
-	createCanvas(windowWidth, windowHeight);
-	background(200);
-
-	font = await loadFont('includes/demos-data/fonts/RobotoMono-Regular.otf');
-
-	textAlign(CENTER, CENTER);
-	textSize(400);
-
-	// Generate contour points ONCE
-	let contours = font.textToContours('ELLA', width / 2, height / 2, {
-		sampleFactor: 0.25
-	});
-
-	// Convert points into particles
-	for (const pts of contours) {
-		for (const pt of pts) {
-			particles.push(new Particle(pt.x, pt.y));
-		}
-	}
 }
 
 function draw() {
-	background(200);
+	stroke(255)
+	let x=cos(frameCount*0.01)
+	let a= color(2, 100, 202)
+	let b= color(250, 2, 2)
+	lights()
+	let col= lerpColor(a,b,x)
+	let col_2 = lerpColor(b,a,x)
+	let col_3 = lerpColor(a,b,x/2)
+	//background(col_3)
+	//print(x)
+	rotateY(frameCount*sin(x))
+	//rect(200,200,200,200)
+	fill(col)
+	rotate(frameCount*.03)
+	rotateX(frameCount*sin(x))
+	//scale(frameCount*0.3)
+	noStroke()
+	sphere(200*x)
+	fill(col_2)
+	box(windowWidth/2,windowHeight/200)
+	//torus(400)
 
-	for (let p of particles) {
 
-		let mouse = createVector(mouseX, mouseY);
-		let dir = p5.Vector.sub(p.pos, mouse);
-		let d = dir.mag();
-
-		if (d < 120) {
-			dir.normalize();
-			dir.mult(3);
-			p.applyForce(dir);
-		}
-
-		p.update();
-		p.show();
-	}
-}
-
-class Particle {
-	constructor(x, y) {
-		this.pos = createVector(x, y);
-		this.base = createVector(x, y); // original letter position
-		this.vel = p5.Vector.random2D().mult(random(0.5, 2));
-		this.acc = createVector(0, 0);
-	}
-
-	applyForce(force) {
-		this.acc.add(force);
-	}
-
-	update() {
-		// Attraction back to original shape
-		let force = p5.Vector.sub(this.base, this.pos);
-		force.mult(0.02);
-		this.applyForce(force);
-
-		this.vel.add(this.acc);
-		this.pos.add(this.vel);
-
-		this.acc.mult(0);
-		this.vel.mult(0.92); // damping
-	}
-
-	show() {
-		noStroke();
-		fill(50);
-		circle(this.pos.x, this.pos.y, 2);
-	}
-}
-
-// Optional: handle resize
-function windowResized() {
-	resizeCanvas(windowWidth, windowHeight);
 }
 </script>
 
